@@ -35,6 +35,19 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
     private var temperatureChar: BluetoothGattCharacteristic? = null
     private var buttonClickChar: BluetoothGattCharacteristic? = null
 
+    //UUIDs
+    private val servicesUUIDs = listOf(
+        "00001805-0000-1000-8000-00805f9b34fb",
+        "3c0a1000-281d-4b48-b2a7-f15579a1c38f"
+    )
+
+    private val characteristicUUIDs = listOf(
+        "00002a2b-0000-1000-8000-00805f9b34fb",
+        "3c0a1001-281d-4b48-b2a7-f15579a1c38f",
+        "3c0a1002-281d-4b48-b2a7-f15579a1c38f",
+        "3c0a1003-281d-4b48-b2a7-f15579a1c38f"
+    )
+
     override fun onCleared() {
         super.onCleared()
         Log.d(TAG, "onCleared")
@@ -121,15 +134,21 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
 
                         Log.d(TAG, "isRequiredServiceSupported - TODO")
 
-                        /* TODO
-                        - Nous devons vérifier ici que le périphérique auquel on vient de se connecter possède
-                          bien tous les services et les caractéristiques attendues, on vérifiera aussi que les
-                          caractéristiques présentent bien les opérations attendues
-                        - On en profitera aussi pour garder les références vers les différents services et
-                          caractéristiques (déclarés en lignes 39 à 44)
-                        */
+                        val foundUUIDs = gatt.services.fold(listOf<String>()) {acc , e ->
+                            val tmp = mutableListOf<String>()
+                            if (e.uuid.toString() in servicesUUIDs) {
+                                tmp.add(e.uuid.toString())
+                                tmp.addAll(e.characteristics.fold(listOf<String>()) { acc2, e2 ->
+                                    if (e2.uuid.toString() in characteristicUUIDs)
+                                        acc2 + e2.uuid.toString()
+                                    else
+                                        acc2
+                                })
+                            }
+                            acc + tmp
+                        }
 
-                        return false //FIXME si tout est OK, on retourne true, sinon la librairie appelera la méthode onDeviceDisconnected() avec le flag REASON_NOT_SUPPORTED
+                        return foundUUIDs.containsAll(servicesUUIDs) && foundUUIDs.containsAll(characteristicUUIDs)
                     }
 
                     override fun initialize() {
