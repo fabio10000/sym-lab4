@@ -131,9 +131,7 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
                     public override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
                         mConnection = gatt //trick to force disconnection
 
-                        Log.d(TAG, "isRequiredServiceSupported - TODO")
-
-                        val foundUUIDs = gatt.services.forEach {
+                        gatt.services.forEach {
                             val serviceFound = when (it.uuid.toString()) {
                                 TIME_SERVICE_UUID -> {
                                     timeService = it
@@ -156,6 +154,7 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
                                 }
                             }
                         }
+
                         return timeService != null &&
                                 symService != null &&
                                 currentTimeChar != null &&
@@ -171,7 +170,9 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
                             Dans notre cas il s'agit de s'enregistrer pour recevoir les notifications proposées par certaines
                             caractéristiques, on en profitera aussi pour mettre en place les callbacks correspondants.
                          */
-                        setNotificationCallback(buttonClickChar).with { _, data -> nbClicks.postValue(data.getIntValue(Data.FORMAT_UINT8, 0)) }
+                        setNotificationCallback(buttonClickChar).with { _, data ->
+                            nbClicks.postValue(data.getIntValue(Data.FORMAT_UINT8, 0))
+                        }
                         enableNotifications(buttonClickChar).enqueue()
                     }
 
@@ -196,7 +197,13 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
                 des MutableLiveData
                 On placera des méthodes similaires pour les autres opérations
             */
-            return false //FIXME
+            if (temperatureChar === null) {
+                return false
+            }
+            readCharacteristic(temperatureChar).with { _, data ->
+                temperature.postValue(data.getIntValue(Data.FORMAT_UINT16, 0)?.div(10))
+            }.enqueue()
+            return true
         }
     }
 

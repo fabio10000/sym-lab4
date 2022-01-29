@@ -38,6 +38,8 @@ class BleActivity : BaseTemplateActivity() {
 
     // gui connected elements
     private lateinit var textClickCounter: TextView
+    private lateinit var textTemperature: TextView
+    private lateinit var btnTemperature: Button
 
     //menu elements
     private var scanMenuBtn: MenuItem? = null
@@ -64,6 +66,8 @@ class BleActivity : BaseTemplateActivity() {
         scanResults = findViewById(R.id.ble_scanresults)
         emptyScanResults = findViewById(R.id.ble_scanresults_empty)
         textClickCounter = findViewById(R.id.textClickCounter)
+        textTemperature = findViewById(R.id.textTemperature)
+        btnTemperature = findViewById(R.id.btnTemperature)
 
         //manage scanned item
         scanResultsAdapter = ResultsAdapter(this)
@@ -85,9 +89,14 @@ class BleActivity : BaseTemplateActivity() {
             }
         }
 
+        btnTemperature.setOnClickListener {
+            bleViewModel.readTemperature()
+        }
+
         //ble events
         bleViewModel.isConnected.observe(this, { updateGui() })
-        bleViewModel.nbClicks.observe(this, {updateGui()})
+        bleViewModel.nbClicks.observe(this, { updateGui() })
+        bleViewModel.temperature.observe(this, { updateGui() })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -131,6 +140,7 @@ class BleActivity : BaseTemplateActivity() {
             operationPanel.visibility = View.VISIBLE
 
             textClickCounter.text = bleViewModel.nbClicks.value.toString()
+            textTemperature.text = bleViewModel.temperature.value.toString()
 
             if (scanMenuBtn != null && disconnectMenuBtn != null) {
                 scanMenuBtn!!.isVisible = false
