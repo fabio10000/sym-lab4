@@ -10,6 +10,7 @@ import android.bluetooth.le.*
 import androidx.lifecycle.ViewModelProvider
 import android.os.Handler
 import android.os.Looper
+import android.os.ParcelUuid
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -151,12 +152,12 @@ class BleActivity : BaseTemplateActivity() {
 
             //we scan for any BLE device
             //we don't filter them based on advertised services...
-            // TODO ajouter un filtre pour n'afficher que les devices proposant
             // le service "SYM" (UUID: "3c0a1000-281d-4b48-b2a7-f15579a1c38f")
+            val filters: List<ScanFilter> = listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString("3c0a1000-281d-4b48-b2a7-f15579a1c38f")).build())
 
             //reset display
             scanResultsAdapter.clear()
-            bluetoothScanner.startScan(null, builderScanSettings.build(), leScanCallback)
+            bluetoothScanner.startScan(filters, builderScanSettings.build(), leScanCallback)
             Log.d(TAG, "Start scanning...")
             isScanning = true
 
