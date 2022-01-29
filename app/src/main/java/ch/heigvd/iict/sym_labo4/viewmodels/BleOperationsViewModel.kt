@@ -11,7 +11,9 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import no.nordicsemi.android.ble.BleManager
+import no.nordicsemi.android.ble.data.Data
 import no.nordicsemi.android.ble.observer.ConnectionObserver
+import java.util.*
 
 /**
  * Project: Labo4
@@ -26,6 +28,8 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
 
     //live data - observer
     val isConnected = MutableLiveData(false)
+    val temperature = MutableLiveData(0)
+    val nbClicks = MutableLiveData(0)
 
     //Services and Characteristics of the SYM Pixl
     private var timeService: BluetoothGattService? = null
@@ -36,17 +40,12 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
     private var buttonClickChar: BluetoothGattCharacteristic? = null
 
     //UUIDs
-    private val servicesUUIDs = listOf(
-        "00001805-0000-1000-8000-00805f9b34fb",
-        "3c0a1000-281d-4b48-b2a7-f15579a1c38f"
-    )
-
-    private val characteristicUUIDs = listOf(
-        "00002a2b-0000-1000-8000-00805f9b34fb",
-        "3c0a1001-281d-4b48-b2a7-f15579a1c38f",
-        "3c0a1002-281d-4b48-b2a7-f15579a1c38f",
-        "3c0a1003-281d-4b48-b2a7-f15579a1c38f"
-    )
+    private var TIME_SERVICE_UUID = "00001805-0000-1000-8000-00805f9b34fb"
+    private var SYM_SERVICE_UUID = "3c0a1000-281d-4b48-b2a7-f15579a1c38f"
+    private var CURRENT_TIME_CHAR = "00002a2b-0000-1000-8000-00805f9b34fb"
+    private var INTEGER_CHAR = "3c0a1001-281d-4b48-b2a7-f15579a1c38f"
+    private var TEMPERATURE_CHAR = "3c0a1002-281d-4b48-b2a7-f15579a1c38f"
+    private var BTN_CLICK_CHAR = "3c0a1003-281d-4b48-b2a7-f15579a1c38f"
 
     override fun onCleared() {
         super.onCleared()
@@ -134,21 +133,35 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
 
                         Log.d(TAG, "isRequiredServiceSupported - TODO")
 
-                        val foundUUIDs = gatt.services.fold(listOf<String>()) {acc , e ->
-                            val tmp = mutableListOf<String>()
-                            if (e.uuid.toString() in servicesUUIDs) {
-                                tmp.add(e.uuid.toString())
-                                tmp.addAll(e.characteristics.fold(listOf<String>()) { acc2, e2 ->
-                                    if (e2.uuid.toString() in characteristicUUIDs)
-                                        acc2 + e2.uuid.toString()
-                                    else
-                                        acc2
-                                })
+                        val foundUUIDs = gatt.services.forEach {
+                            val serviceFound = when (it.uuid.toString()) {
+                                TIME_SERVICE_UUID -> {
+                                    timeService = it
+                                    true
+                                }
+                                SYM_SERVICE_UUID -> {
+                                    symService = it
+                                    true
+                                }
+                                else -> false
                             }
-                            acc + tmp
+                            if (serviceFound) {
+                                it.characteristics.forEach { jt ->
+                                    when (jt.uuid.toString()) {
+                                        CURRENT_TIME_CHAR -> currentTimeChar = jt
+                                        INTEGER_CHAR -> integerChar = jt
+                                        TEMPERATURE_CHAR -> temperatureChar = jt
+                                        BTN_CLICK_CHAR -> buttonClickChar = jt
+                                    }
+                                }
+                            }
                         }
-
-                        return foundUUIDs.containsAll(servicesUUIDs) && foundUUIDs.containsAll(characteristicUUIDs)
+                        return timeService != null &&
+                                symService != null &&
+                                currentTimeChar != null &&
+                                integerChar != null &&
+                                temperatureChar != null &&
+                                buttonClickChar != null
                     }
 
                     override fun initialize() {
@@ -158,6 +171,8 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
                             Dans notre cas il s'agit de s'enregistrer pour recevoir les notifications proposées par certaines
                             caractéristiques, on en profitera aussi pour mettre en place les callbacks correspondants.
                          */
+                        setNotificationCallback(buttonClickChar).with { _, data -> nbClicks.postValue(data.getIntValue(Data.FORMAT_UINT8, 0)) }
+                        enableNotifications(buttonClickChar).enqueue()
                     }
 
                     override fun onServicesInvalidated() {

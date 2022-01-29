@@ -19,6 +19,19 @@
 
             <!-- TODO vous placerez dans ce layout toutes les vues nécessaires aux intéractions avec le périphérique BLE -->
 
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="@string/ble_clickcounter_title" />
+
+            <TextView
+                android:id="@+id/textClickCounter"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="0" />
+
         </LinearLayout>
 
     </ScrollView>
@@ -26,7 +39,8 @@
     <RelativeLayout
         android:id="@+id/ble_scan"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        tools:visibility="invisible">
 
         <ListView
             android:id="@+id/ble_scanresults"
@@ -38,9 +52,9 @@
             android:id="@+id/ble_scanresults_empty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/ble_empty"
             android:layout_centerInParent="true"
-            android:gravity="center" />
+            android:gravity="center"
+            android:text="@string/ble_empty" />
 
     </RelativeLayout>
 

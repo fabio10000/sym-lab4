@@ -36,6 +36,9 @@ class BleActivity : BaseTemplateActivity() {
     private lateinit var scanResults: ListView
     private lateinit var emptyScanResults: TextView
 
+    // gui connected elements
+    private lateinit var textClickCounter: TextView
+
     //menu elements
     private var scanMenuBtn: MenuItem? = null
     private var disconnectMenuBtn: MenuItem? = null
@@ -60,6 +63,7 @@ class BleActivity : BaseTemplateActivity() {
         scanPanel = findViewById(R.id.ble_scan)
         scanResults = findViewById(R.id.ble_scanresults)
         emptyScanResults = findViewById(R.id.ble_scanresults_empty)
+        textClickCounter = findViewById(R.id.textClickCounter)
 
         //manage scanned item
         scanResultsAdapter = ResultsAdapter(this)
@@ -83,6 +87,7 @@ class BleActivity : BaseTemplateActivity() {
 
         //ble events
         bleViewModel.isConnected.observe(this, { updateGui() })
+        bleViewModel.nbClicks.observe(this, {updateGui()})
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -124,6 +129,8 @@ class BleActivity : BaseTemplateActivity() {
 
             scanPanel.visibility = View.GONE
             operationPanel.visibility = View.VISIBLE
+
+            textClickCounter.text = bleViewModel.nbClicks.value.toString()
 
             if (scanMenuBtn != null && disconnectMenuBtn != null) {
                 scanMenuBtn!!.isVisible = false
