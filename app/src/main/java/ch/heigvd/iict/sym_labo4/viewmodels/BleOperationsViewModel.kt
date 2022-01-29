@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import no.nordicsemi.android.ble.BleManager
+import no.nordicsemi.android.ble.annotation.WriteType
 import no.nordicsemi.android.ble.data.Data
 import no.nordicsemi.android.ble.observer.ConnectionObserver
 import java.util.*
@@ -79,6 +80,13 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
             return false
         else
             return ble.readTemperature()
+    }
+
+    fun sendValue(value: Int): Boolean {
+        if (!isConnected.value!! || integerChar == null)
+            return false
+        else
+            return ble.sendValue(value)
     }
 
     private val bleConnectionObserver: ConnectionObserver = object : ConnectionObserver {
@@ -203,6 +211,16 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
             readCharacteristic(temperatureChar).with { _, data ->
                 temperature.postValue(data.getIntValue(Data.FORMAT_UINT16, 0)?.div(10))
             }.enqueue()
+            return true
+        }
+
+        fun sendValue(value: Int): Boolean {
+            if (integerChar === null) {
+                return false
+            }
+
+            integerChar!!.setValue(value, Data.FORMAT_UINT32, 0)
+            writeCharacteristic(integerChar, integerChar!!.value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT).enqueue()
             return true
         }
     }

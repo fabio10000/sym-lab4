@@ -40,6 +40,8 @@ class BleActivity : BaseTemplateActivity() {
     private lateinit var textClickCounter: TextView
     private lateinit var textTemperature: TextView
     private lateinit var btnTemperature: Button
+    private lateinit var inputValue: EditText
+    private lateinit var btnSendValue: Button
 
     //menu elements
     private var scanMenuBtn: MenuItem? = null
@@ -68,6 +70,8 @@ class BleActivity : BaseTemplateActivity() {
         textClickCounter = findViewById(R.id.textClickCounter)
         textTemperature = findViewById(R.id.textTemperature)
         btnTemperature = findViewById(R.id.btnTemperature)
+        inputValue = findViewById(R.id.inputValue)
+        btnSendValue = findViewById(R.id.btnSendValue)
 
         //manage scanned item
         scanResultsAdapter = ResultsAdapter(this)
@@ -91,6 +95,10 @@ class BleActivity : BaseTemplateActivity() {
 
         btnTemperature.setOnClickListener {
             bleViewModel.readTemperature()
+        }
+
+        btnSendValue.setOnClickListener {
+            bleViewModel.sendValue(inputValue.text.toString().toInt())
         }
 
         //ble events
