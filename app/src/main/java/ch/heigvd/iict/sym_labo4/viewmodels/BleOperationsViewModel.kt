@@ -29,8 +29,9 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
 
     //live data - observer
     val isConnected = MutableLiveData(false)
-    val temperature = MutableLiveData(0)
-    val nbClicks = MutableLiveData(0)
+    val temperature = MutableLiveData("N/A")
+    val nbClicks = MutableLiveData("N/A")
+    val currentTime = MutableLiveData("N/A")
 
     //Services and Characteristics of the SYM Pixl
     private var timeService: BluetoothGattService? = null
@@ -87,6 +88,13 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
             return false
         else
             return ble.sendValue(value)
+    }
+
+    fun setCurrentTime(time: Calendar): Boolean {
+        if (!isConnected.value!! || currentTimeChar == null)
+            return false
+        else
+            return ble.setCurrentTime(time)
     }
 
     private val bleConnectionObserver: ConnectionObserver = object : ConnectionObserver {
@@ -179,9 +187,21 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
                             caractéristiques, on en profitera aussi pour mettre en place les callbacks correspondants.
                          */
                         setNotificationCallback(buttonClickChar).with { _, data ->
-                            nbClicks.postValue(data.getIntValue(Data.FORMAT_UINT8, 0))
+                            nbClicks.postValue(data.getIntValue(Data.FORMAT_UINT8, 0).toString())
                         }
                         enableNotifications(buttonClickChar).enqueue()
+
+                        setNotificationCallback(currentTimeChar).with { _, data ->
+                            val year = data.getIntValue(Data.FORMAT_UINT16, 0)
+                            val month = data.getIntValue(Data.FORMAT_UINT8, 2)
+                            val day = data.getIntValue(Data.FORMAT_UINT8, 3)
+                            val hour = data.getIntValue(Data.FORMAT_UINT8, 4)
+                            val minute = data.getIntValue(Data.FORMAT_UINT8, 5)
+                            val second = data.getIntValue(Data.FORMAT_UINT8, 6)
+
+                            currentTime.postValue("$year-$month-$day $hour:$minute:$second")
+                        }
+                        enableNotifications(currentTimeChar).enqueue()
                     }
 
                     override fun onServicesInvalidated() {
@@ -209,7 +229,7 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
                 return false
             }
             readCharacteristic(temperatureChar).with { _, data ->
-                temperature.postValue(data.getIntValue(Data.FORMAT_UINT16, 0)?.div(10))
+                temperature.postValue(data.getIntValue(Data.FORMAT_UINT16, 0)?.div(10).toString())
             }.enqueue()
             return true
         }
@@ -221,6 +241,21 @@ class BleOperationsViewModel(application: Application) : AndroidViewModel(applic
 
             integerChar!!.setValue(value, Data.FORMAT_UINT32, 0)
             writeCharacteristic(integerChar, integerChar!!.value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT).enqueue()
+            return true
+        }
+
+        fun setCurrentTime(time: Calendar): Boolean {
+            if (currentTimeChar == null) {
+                return false
+            }
+
+            currentTimeChar!!.setValue(time.get(Calendar.YEAR), Data.FORMAT_UINT16, 0)
+            currentTimeChar!!.setValue(time.get(Calendar.MONTH), Data.FORMAT_UINT8, 2)
+            currentTimeChar!!.setValue(time.get(Calendar.DAY_OF_MONTH) + 1, Data.FORMAT_UINT8, 3)
+            currentTimeChar!!.setValue(time.get(Calendar.HOUR_OF_DAY), Data.FORMAT_UINT8, 4)
+            currentTimeChar!!.setValue(time.get(Calendar.MINUTE), Data.FORMAT_UINT8, 5)
+            currentTimeChar!!.setValue(time.get(Calendar.SECOND), Data.FORMAT_UINT8, 6)
+            writeCharacteristic(currentTimeChar, currentTimeChar!!.value, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT).enqueue()
             return true
         }
     }

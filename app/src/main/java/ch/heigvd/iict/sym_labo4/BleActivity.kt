@@ -16,6 +16,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import java.util.*
 
 /**
  * Project: Labo4
@@ -42,6 +43,8 @@ class BleActivity : BaseTemplateActivity() {
     private lateinit var btnTemperature: Button
     private lateinit var inputValue: EditText
     private lateinit var btnSendValue: Button
+    private lateinit var textCurrentTime: TextView
+    private lateinit var btnCurrentTime: Button
 
     //menu elements
     private var scanMenuBtn: MenuItem? = null
@@ -72,6 +75,8 @@ class BleActivity : BaseTemplateActivity() {
         btnTemperature = findViewById(R.id.btnTemperature)
         inputValue = findViewById(R.id.inputValue)
         btnSendValue = findViewById(R.id.btnSendValue)
+        textCurrentTime = findViewById(R.id.textCurrentTime)
+        btnCurrentTime = findViewById(R.id.btnCurrentTime)
 
         //manage scanned item
         scanResultsAdapter = ResultsAdapter(this)
@@ -101,10 +106,15 @@ class BleActivity : BaseTemplateActivity() {
             bleViewModel.sendValue(inputValue.text.toString().toInt())
         }
 
+        btnCurrentTime.setOnClickListener {
+            bleViewModel.setCurrentTime(Calendar.getInstance())
+        }
+
         //ble events
         bleViewModel.isConnected.observe(this, { updateGui() })
         bleViewModel.nbClicks.observe(this, { updateGui() })
         bleViewModel.temperature.observe(this, { updateGui() })
+        bleViewModel.currentTime.observe(this, { updateGui() })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -149,6 +159,7 @@ class BleActivity : BaseTemplateActivity() {
 
             textClickCounter.text = bleViewModel.nbClicks.value.toString()
             textTemperature.text = bleViewModel.temperature.value.toString()
+            textCurrentTime.text = bleViewModel.currentTime.value.toString()
 
             if (scanMenuBtn != null && disconnectMenuBtn != null) {
                 scanMenuBtn!!.isVisible = false

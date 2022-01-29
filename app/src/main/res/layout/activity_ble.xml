@@ -69,6 +69,24 @@
                 android:layout_height="wrap_content"
                 android:text="@string/ble_sendvalue_send" />
 
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/ble_currenttime_title" />
+
+            <TextView
+                android:id="@+id/textCurrentTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="N/A" />
+
+            <Button
+                android:id="@+id/btnCurrentTime"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/ble_currenttime_set" />
+
         </LinearLayout>
 
     </ScrollView>
